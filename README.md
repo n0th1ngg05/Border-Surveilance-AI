@@ -2,12 +2,12 @@
 
 <div align="center">
   <h3>Next-Generation Border Surveillance & Defense Console</h3>
-  <p>Engineered for SIH 26187 | Problem Statement: Border Surveillance System</p>
+  <p>Engineered by <strong>Team RootError</strong> for SIH 26187 | Problem Statement: Border Surveillance System</p>
 </div>
 
 ---
 
-## 📖 Overview
+## Overview
 
 **V.I.E.W** (Virtual Intelligence & Early Warning) is a state-of-the-art border surveillance system utilizing deep learning and advanced analytics to detect illegal crossings and suspicious activities in real-time. Built as a tactical, ultra-premium command and control console, it moves away from bulky, traditional security layouts and introduces an elegant, minimalist, pure-analog design aesthetic — utilizing a strictly "Black, White, and Yellow" palette.
 
@@ -15,7 +15,7 @@ It integrates seamlessly with advanced AI inference pipelines (Optical, Thermal,
 
 ---
 
-## ✨ Features
+## Features
 
 - **Real-Time Object Detection** — Detects humans, vehicles, and contraband using **YOLOv11** with sub-second inference latency.
 - **Virtual Zero-Line Fencing** — Custom polygonal intrusion zones with automated AI bounding boxes and instant threat flagging.
@@ -29,7 +29,7 @@ It integrates seamlessly with advanced AI inference pipelines (Optical, Thermal,
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 V.I.E.W operates on a two-layer native high-performance stack — **strictly avoiding Docker/WSL** to ensure bare-metal execution speeds on Windows-based tactical field servers.
 
@@ -54,7 +54,7 @@ V.I.E.W operates on a two-layer native high-performance stack — **strictly avo
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### AI / ML
 | Library | Purpose |
@@ -101,7 +101,7 @@ V.I.E.W operates on a two-layer native high-performance stack — **strictly avo
 
 ---
 
-## ⚡ Installation
+## Installation
 
 ### Prerequisites
 - **OS:** Windows 10/11
@@ -139,7 +139,7 @@ Ensure your native PostgreSQL service is running. Open pgAdmin (or `psql`) and c
 CREATE DATABASE "border-surveilance";
 ```
 
-> ⚠️ The database name must match exactly, including the spelling.
+> Warning: The database name must match exactly, including the spelling.
 
 ### 5. Configure Environment Variables
 
@@ -166,7 +166,7 @@ DEMO_MODE=true
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Start the Python AI Runtime (FastAPI)
 
@@ -196,7 +196,7 @@ If `DEMO_MODE=true` is set (default), on startup the system will automatically:
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 The system uses 7 interconnected PostgreSQL tables with UUID primary keys:
 
@@ -212,7 +212,7 @@ The system uses 7 interconnected PostgreSQL tables with UUID primary keys:
 
 ---
 
-## 🎨 UI/UX Design Philosophy
+## UI/UX Design Philosophy
 
 The V.I.E.W frontend is meticulously crafted to emulate high-end analog hardware:
 
@@ -224,7 +224,7 @@ The V.I.E.W frontend is meticulously crafted to emulate high-end analog hardware
 
 ---
 
-## 📡 API Integration
+## API Integration
 
 The thin-client frontend communicates strictly through two channels:
 
@@ -245,11 +245,24 @@ The thin-client frontend communicates strictly through two channels:
 | `event:fence` | Server → Client | Virtual fence intrusion detected |
 | `alert` | Server → Client | High-priority consolidated alert |
 
-> For the full API reference including all protected endpoints, request/response schemas, and Redis Pub/Sub channels, see [`docs/BACKEND_DOCUMENTATION.md`](./docs/BACKEND_DOCUMENTATION.md).
+---
+
+## Team: RootError
+
+Engineered and developed for the **Smart India Hackathon 2026** by team **RootError**:
+
+| Member | Role / Designation | Contact & Connect | Core Expertise & Focus Areas |
+|:---|:---|:---|:---|
+| **Humza Ahmad** | **Team Leader**<br>Full-Stack & AI Architect | `+91 8240253854`<br>[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/humza-ahmad-n0th1ng/) | Software Engineering, Artificial Intelligence, Full-Stack Development, and Computer Vision. |
+| **Mizan Ur Rahman Mondal** | Embedded Systems & Hardware Specialist | `+91 70036 70838`<br>[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mizan-mondal/) | Hardware Prototyping, Embedded Systems, IoT Sensor Integration & Physical Computing. |
+| **Farhan Ahmad** | Frontend Architect & Integration Lead | `+91 98691 60286`<br>[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/farhan-ahmad-398b6b307/) | Frontend Architecture, UI/UX Engineering, System Component Binding & Client Integration. |
+| **Suhana Paul** | AI / CV Engineer & Technical Presentation | `+91 93300 64096`<br>[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/suhana-p-3b979a26b/) | Deep Learning Model Training, Computer Vision Pipelines, Data Analytics & Structured Presentation. |
+| **Madhumita Roy** | UI/UX & Graphic Designer | `+91 83340 36426` | Graphic Design, UI Asset Creation, Visual Ergonomics & Software Development. |
+| **Aaratrika Mitra** | Software Associate & Documentation | `+91 90738 04049`<br>[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/aaratrika-m-2bb913330/) | Computer Software Development, Technical Documentation & Structured Presentation. |
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -261,7 +274,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-## 🛡️ License & Confidentiality
+## License & Confidentiality
 
 Developed exclusively for the **Smart India Hackathon 2026 (Problem Statement 26187)**.
 
