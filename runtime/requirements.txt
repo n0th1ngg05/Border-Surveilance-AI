@@ -1,0 +1,18 @@
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+opencv-python-headless==4.10.0.84
+redis==5.0.7
+pydantic==2.8.2
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+numpy==1.26.4
+shapely==2.0.5
+
+# AI / ML (install separately due to CUDA version dependency)
+# torch>=2.3.0 (install with: pip install torch --index-url https://download.pytorch.org/whl/cu121)
+# ultralytics>=8.2.0
+# insightface>=0.7.3
+# paddleocr>=2.7.3
+# easyocr>=1.7.1
+# faiss-gpu>=1.7.4
+# bytetracker  (install from source)

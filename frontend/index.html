@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>V.I.E.W — Border Defense Intelligence Console · SIH-26187</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<base target="_blank">
+</head>
+<body>
+
+<!-- ══════════════ BOOT SCREEN ══════════════ -->
+<div id="boot-screen">
+  <div class="boot-core">
+    <div class="boot-mark">V<span>.</span>I<span>.</span>E<span>.</span>W</div>
+    <div class="boot-sub">BORDER DEFENSE INTELLIGENCE CONSOLE</div>
+    <div class="boot-track"><div class="boot-fill"></div></div>
+    <div class="boot-status" id="boot-status">ESTABLISHING SECURE UPLINK…</div>
+  </div>
+</div>
+
+<!-- ══════════════ CONNECTION BANNER ══════════════ -->
+<div id="conn-banner">
+  <span class="cb-dot"></span>
+  UPLINK INTERRUPTED — RECONNECTING TO COMMAND NODE…
+</div>
+
+<!-- ══════════════ APP FRAME ══════════════ -->
+<div class="app">
+
+  <!-- ── LEFT ICON RAIL ── -->
+  <nav class="rail">
+    <div class="rail-logo">V</div>
+    <button class="rail-btn active" id="rail-overview" title="Overview">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+      <span>GRID</span>
+    </button>
+    <button class="rail-btn" id="rail-sensors" title="Sensors">
+      <svg viewBox="0 0 24 24"><path d="M2 8c3-3 6-3 9 0s6 3 9 0"/><circle cx="5" cy="8" r="1.6"/><circle cx="19" cy="8" r="1.6"/><path d="M2 16c3-3 6-3 9 0s6 3 9 0"/></svg>
+      <span>NODES</span>
+    </button>
+    <button class="rail-btn" id="rail-alerts" title="Alerts">
+      <svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4M12 17.2v.3"/></svg>
+      <span>ALERTS</span>
+    </button>
+    <button class="rail-btn" id="rail-roster" title="Roster">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.6-3.4 2.8-5 5.5-5s4.9 1.6 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.6c2.6.1 4.3 1.5 5 4.4"/></svg>
+      <span>ROSTER</span>
+    </button>
+    <button class="rail-btn" id="rail-vehicles" title="Vehicles">
+      <svg viewBox="0 0 24 24"><path d="M3 16v-4l2-6h14l2 6v4"/><path d="M3 16h18v3h-2.5"/><circle cx="7.5" cy="17.5" r="1.8"/><path d="M9.3 17.5h6.4"/><circle cx="16.5" cy="17.5" r="1.8"/><path d="M7 10h10"/></svg>
+      <span>FLEET</span>
+    </button>
+    <button class="rail-btn" id="rail-zones" title="Zones">
+      <svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg>
+      <span>ZONES</span>
+    </button>
+    <button class="rail-btn" id="rail-system" title="System">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>
+      <span>SYS</span>
+    </button>
+    <div class="rail-foot">
+      <div class="rail-ws off" id="rail-ws" title="Socket link"></div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN COLUMN ── -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-word">V.I.E.W</div>
+        <div class="brand-sub">AI VIDEO ANALYTICS · SIH-26187 · MINISTRY OF DEFENCE / BSF</div>
+      </div>
+      <div class="top-right">
+        <div class="pill ws-pill" id="ws-pill"><span class="pill-dot"></span><span id="ws-label">LINK</span></div>
+        <div class="pill threat-pill t-elevated" id="threat-pill">
+          <span class="pill-dot"></span>THREAT&nbsp;<b id="threat-val">ELEVATED</b>
+        </div>
+        <button class="op-chip" id="op-chip" title="System status">
+          <span class="op-avatar">OP</span>
+          <span class="op-meta"><b>STN COMMAND</b><i>operator · read-only verify</i></span>
+        </button>
+        <div class="top-clock" id="top-clock">00:00:00<small>IST</small></div>
+      </div>
+    </header>
+
+    <!-- CONTENT GRID -->
+    <div class="content">
+
+      <!-- LEFT · SENSOR NODES -->
+      <aside class="col col-left">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>SENSOR NODES</h3>
+            <span class="sp sp-green" id="sensor-count">4 ONLINE</span>
+          </div>
+          <div class="sensor-list" id="sensor-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>THREAT POSTURE</h3></div>
+          <div class="threat-box">
+            <div class="threat-readout"><span class="tr-label">SECTOR THREAT LEVEL</span><span class="tr-val" id="threat-label">ELEVATED</span></div>
+            <div class="threat-bar" id="threat-bar">
+              <div class="tb-seg" data-lv="NORMAL">NORMAL</div>
+              <div class="tb-seg on" data-lv="ELEVATED">ELEVATED</div>
+              <div class="tb-seg" data-lv="HIGH">HIGH</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel breach-panel">
+          <div class="panel-head"><h3>DRILL CONTROL</h3></div>
+          <p class="breach-note">Broadcast a simulated zero-line incursion to all connected consoles &amp; edge actuators.</p>
+          <button class="btn-breach" id="btn-breach">◉ SIMULATE INCURSION</button>
+        </div>
+      </aside>
+
+      <!-- CENTER · PRIMARY FEED -->
+      <section class="col col-center">
+        <div class="feed-panel">
+          <div class="feed-head">
+            <div class="feed-id">
+              <span class="live-dot"></span>
+              <div class="feed-name" id="feed-name">Sector 4 — North Border Fence<small>—</small></div>
+            </div>
+            <div class="feed-meta">
+              <span class="fm-item" id="feed-clock">00:00:00</span>
+              <span class="fm-item gold" id="feed-fps">30.0 FPS</span>
+              <span class="fm-item mono" id="feed-frame">FRM 0001042</span>
+            </div>
+          </div>
+
+          <div class="feed-stage">
+            <canvas id="hud-canvas"></canvas>
+            <div class="stage-scan"></div>
+            <div class="stage-corner tl"></div><div class="stage-corner tr"></div>
+            <div class="stage-corner bl"></div><div class="stage-corner br"></div>
+            <div class="stage-tag mono">AI INFERENCE · ALT-FRAME DEMUX A/B/C</div>
+          </div>
+
+          <div class="feed-tools">
+            <button class="ft-btn" id="ft-rec" title="Arm snapshot capture"><span class="rec-dot"></span>SNAPSHOT</button>
+            <div class="ft-spacer"></div>
+            <button class="ft-btn" id="ft-max" title="Fullscreen">
+              <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+          </div>
+
+          <div class="minis" id="minis"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT · ALERTS + STATS -->
+      <aside class="col col-right">
+        <div class="panel stats-panel">
+          <div class="stat-card"><div class="sc-num" id="st-cams">0</div><div class="sc-label">CAMERAS ONLINE</div></div>
+          <div class="stat-card"><div class="sc-num" id="st-pers">0</div><div class="sc-label">PERSONNEL ON DUTY</div></div>
+          <div class="stat-card"><div class="sc-num" id="st-veh">0</div><div class="sc-label">ANPR SCANS TODAY</div></div>
+          <div class="stat-card"><div class="sc-num gold" id="st-intr">0</div><div class="sc-label">INTRUSIONS BLOCKED</div></div>
+        </div>
+
+        <div class="panel alerts-panel">
+          <div class="panel-head">
+            <h3>INCIDENT FEED</h3>
+            <span class="sp sp-red" id="open-count">0 OPEN</span>
+          </div>
+          <div class="alerts-list" id="alerts-list"></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- STATUS STRIP -->
+    <footer class="statusbar">
+      <div class="ss-item"><span class="ss-dot ok" id="ss-pg"></span>POSTGRESQL</div>
+      <div class="ss-item"><span class="ss-dot ok" id="ss-redis"></span>REDIS</div>
+      <div class="ss-item"><span class="ss-dot ok" id="ss-mqtt"></span>MQTT</div>
+      <div class="ss-item"><span class="ss-dot warn" id="ss-ai"></span>AI RUNTIME</div>
+      <div class="ss-sep"></div>
+      <div class="ss-item mono" id="ss-frames">FRM 0001042 · PIPE A</div>
+      <div class="ss-item mono" id="ss-uptime">UP 00:00</div>
+      <div class="ss-item mono gold" id="ss-lat">— ms</div>
+      <div class="ss-spacer"></div>
+      <div class="ss-item dim">SIH-26187 · TEAM ROOTERROR · CLASSIFIED // FOR DEMO</div>
+    </footer>
+  </div>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+<div class="modal-backdrop" id="modal-backdrop"></div>
+
+<!-- Camera modal -->
+<div class="modal" id="modal-camera">
+  <div class="m-head">
+    <div><span class="m-tag">SENSOR NODE</span><h2 id="mcam-name">—</h2></div>
+    <button class="m-close" data-close>✕</button>
+  </div>
+  <div class="m-body">
+    <div class="m-grid4">
+      <div class="mf"><label>STATUS</label><div id="mcam-status">—</div></div>
+      <div class="mf"><label>FEED TYPE</label><div id="mcam-type">—</div></div>
+      <div class="mf"><label>FPS</label><div class="td-mono" id="mcam-fps">—</div></div>
+      <div class="mf"><label>RESOLUTION</label><div class="td-mono" id="mcam-res">—</div></div>
+    </div>
+    <div class="mf"><label>LOCATION / GRID REF</label><div class="td-mono" id="mcam-loc">—</div></div>
+    <div class="mf"><label>RTSP STREAM URL</label><div class="td-mono dim-t" id="mcam-rtsp">—</div></div>
+    <div class="m-preview"><canvas id="mcam-canvas"></canvas><span class="m-preview-tag mono">LIVE PREVIEW · NVDEC H.264</span></div>
+  </div>
+  <div class="m-foot">
+    <button class="mbtn ghost" data-close>CLOSE</button>
+    <button class="mbtn gold" id="mcam-primary">SET AS PRIMARY FEED</button>
+  </div>
+</div>
+
+<!-- Alert modal -->
+<div class="modal" id="modal-alert">
+  <div class="m-head">
+    <div><span class="m-tag lv-HIGH" id="malert-tag">ALERT · HIGH</span><h2 id="malert-title">—</h2></div>
+    <button class="m-close" data-close>✕</button>
+  </div>
+  <div class="m-body">
+    <div class="m-grid4">
+      <div class="mf"><label>ALERT ID</label><div class="td-mono" id="malert-id">—</div></div>
+      <div class="mf"><label>MODULE</label><div class="td-mono" id="malert-module">—</div></div>
+      <div class="mf"><label>CAMERA</label><div id="malert-cam">—</div></div>
+      <div class="mf"><label>TIMESTAMP</label><div class="td-mono" id="malert-time">—</div></div>
+    </div>
+    <div class="m-grid2">
+      <div class="mf"><label>ZONE</label><div id="malert-zone">—</div></div>
+      <div class="mf"><label>ENTITY ID</label><div class="td-mono" id="malert-entity">—</div></div>
+    </div>
+    <div class="mf"><label>RAW MESSAGE</label><div class="m-msg" id="malert-msg">—</div></div>
+    <div class="mf"><label>OPERATOR RESPONSE NOTES</label>
+      <textarea class="m-notes" id="malert-notes" placeholder="Enter tactical response notes… (read-only verify layer)"></textarea>
+    </div>
+  </div>
+  <div class="m-foot">
+    <button class="mbtn ghost" data-close>DISMISS VIEW</button>
+    <button class="mbtn red" id="malert-escalate">⬆ ESCALATE</button>
+    <button class="mbtn green" id="malert-ack">✓ ACKNOWLEDGE</button>
+  </div>
+</div>
+
+<!-- Roster modal -->
+<div class="modal wide" id="modal-roster">
+  <div class="m-head">
+    <div><span class="m-tag">PATROL ROSTER</span><h2>Active Duty Personnel</h2></div>
+    <button class="m-close" data-close>✕</button>
+  </div>
+  <div class="m-body">
+    <table class="m-table">
+      <thead><tr><th>Service No.</th><th>Name / Rank</th><th>Unit</th><th>Station</th><th>Status</th><th>Verified</th></tr></thead>
+      <tbody id="roster-tbody"></tbody>
+    </table>
+  </div>
+  <div class="m-foot"><button class="mbtn ghost" data-close>CLOSE</button></div>
+</div>
+
+<!-- Vehicles modal -->
+<div class="modal wide" id="modal-vehicles">
+  <div class="m-head">
+    <div><span class="m-tag">ANPR REGISTRY</span><h2>Vehicle Scan Log</h2></div>
+    <button class="m-close" data-close>✕</button>
+  </div>
+  <div class="m-body">
+    <table class="m-table">
+      <thead><tr><th>Plate</th><th>Type / Model</th><th>Unit</th><th>Last Checkpoint</th><th>Status</th></tr></thead>
+      <tbody id="vehicles-tbody"></tbody>
+    </table>
+  </div>
+  <div class="m-foot"><button class="mbtn ghost" data-close>CLOSE</button></div>
+</div>
+
+<!-- Zones modal -->
+<div class="modal" id="modal-zones">
+  <div class="m-head">
+    <div><span class="m-tag">VIRTUAL FENCING</span><h2>Zone Configuration</h2></div>
+    <button class="m-close" data-close>✕</button>
+  </div>
+  <div class="m-body"><div class="zones-list" id="zones-list"></div></div>
+  <div class="m-foot"><button class="mbtn ghost" data-close>CLOSE</button></div>
+</div>
+
+<!-- System modal -->
+<div class="modal" id="modal-system">
+  <div class="m-head">
+    <div><span class="m-tag">SYSTEM</span><h2>V.I.E.W System Status</h2></div>
+    <button class="m-close" data-close>✕</button>
+  </div>
+  <div class="m-body">
+    <div class="sys-grid">
+      <div class="sys-card"><label>CAMERAS ONLINE</label><div class="sv green" id="sys-cams">—</div></div>
+      <div class="sys-card"><label>PERSONNEL ON-DUTY</label><div class="sv" id="sys-pers">—</div></div>
+      <div class="sys-card"><label>ANPR SCANS TODAY</label><div class="sv" id="sys-veh">—</div></div>
+      <div class="sys-card"><label>INTRUSIONS BLOCKED</label><div class="sv red" id="sys-intr">—</div></div>
+    </div>
+    <div class="mf"><label>THREAT LEVEL</label>
+      <div class="threat-bar">
+        <div class="tb-seg" data-lv="NORMAL">NORMAL</div>
+        <div class="tb-seg on" data-lv="ELEVATED">ELEVATED</div>
+        <div class="tb-seg" data-lv="HIGH">HIGH</div>
+      </div>
+    </div>
+    <div class="sys-rows">
+      <div class="sys-row"><span>PostgreSQL 16</span><span class="sp sp-green">CONNECTED</span></div>
+      <div class="sys-row"><span>Redis Pub/Sub</span><span class="sp sp-green">CONNECTED</span></div>
+      <div class="sys-row"><span>MQTT Edge Broker</span><span class="sp sp-gold">STANDBY</span></div>
+      <div class="sys-row"><span>AI Runtime · Python FastAPI</span><span class="sp sp-green">RUNNING</span></div>
+      <div class="sys-row"><span>WebSocket · Socket.IO</span><span class="sp sp-green" id="sys-ws-pill">LIVE</span></div>
+      <div class="sys-row"><span>Demo Mode</span><span class="sp sp-gold">ACTIVE</span></div>
+    </div>
+  </div>
+  <div class="m-foot"><button class="mbtn ghost" data-close>CLOSE</button></div>
+</div>
+
+<!-- Toasts -->
+<div id="toast-root"></div>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
