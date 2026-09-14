@@ -99,6 +99,8 @@
     }
   }
 
+  let lastRenderedPage = null;
+
   function render() {
     const match = matchRoute(currentPath);
     const state = store.getState();
@@ -109,6 +111,17 @@
     renderNav(state);
     scheduleNotificationRotation(state);
     refreshHover();
+
+    // Give the page a chance to wire up persistent widgets (e.g. the live
+    // video grid) that must survive future rerenders untouched. Pages that
+    // don't need this simply don't define afterRender.
+    if (lastRenderedPage && lastRenderedPage !== match.page && lastRenderedPage.onLeave) {
+      lastRenderedPage.onLeave();
+    }
+    if (match.page.afterRender) {
+      match.page.afterRender(view, state, match.page.local, currentParams);
+    }
+    lastRenderedPage = match.page;
   }
 
   function renderNav(state) {
@@ -405,6 +418,9 @@
   });
 
   store.subscribe(scheduleRender);
+  // Exposed so non-store-driven code (e.g. live-grid.js clicking a tile to
+  // go solo) can request a rerender without needing its own store action.
+  window._requestRerender = scheduleRender;
 
   currentPath = parseHash();
   currentParams = matchRoute(currentPath).params;

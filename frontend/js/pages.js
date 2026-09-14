@@ -240,19 +240,22 @@
         notificationStrip(state) +
         "</div>";
 
+      // BUG FIX: this panel used to render comp.cameraTile() — a static
+      // component with no <video>, so it always fell through to its
+      // "No signal / awaiting stream link" placeholder text regardless of
+      // backend state. That's a different code path than #/monitor, which
+      // uses live-grid.js (real <video>+<canvas> tiles wired to Socket.IO).
+      // Fix: give this panel the same #live-grid-mount placeholder pattern
+      // as the monitor page's render(), and mount/unmount live-grid.js in
+      // this page's afterRender/onLeave below — same compact tiles, same
+      // live YOLO overlay, just capped to a 2x2 preview here.
       const wall = ui.panel({
         title: "Monitor wall: priority feeds",
         action:
           '<a href="#/monitor" class="label-xs" data-tip="All feeds" style="display:flex;align-items:center;gap:0.35rem">All feeds ' +
           window.icon("arrowUpRight") +
           "</a>",
-        body:
-          '<div class="grid cols-2 tight">' +
-          state.cameras
-            .slice(0, 4)
-            .map((camera) => comp.cameraTile(camera, { compact: true }))
-            .join("") +
-          "</div>",
+        body: '<div id="live-grid-mount" class="live-grid-mount overview-preview"></div>',
       });
 
       const alertsPanel = ui.panel({
@@ -407,6 +410,19 @@
       },
       noop: () => {},
     },
+    // Mirrors monitor's afterRender/onLeave (see comment there): live-grid.js
+    // owns the real <video>/<canvas> nodes outside #view, so mount() here is
+    // idempotent across rerenders and never restarts playback. Always a
+    // fixed 2x2 preview — this panel has no solo mode, just links to
+    // #/monitor for the full wall.
+    afterRender(view) {
+      const mountEl = view.querySelector("#live-grid-mount");
+      if (!mountEl) return;
+      window.liveGrid.mount(mountEl, { layout: "2x2" });
+    },
+    onLeave() {
+      window.liveGrid.unmount();
+    },
   };
 
   /* ================= Live Wall ================= */
@@ -414,9 +430,6 @@
   const monitor = {
     title: () => "Live Wall | V.I.E.W Surveillance Command",
     local: {
-      query: "",
-      status: "all",
-      sort: "id",
       solo: null,
       addOpen: false,
       form: Object.assign({}, EMPTY_CAMERA_FORM),
@@ -424,84 +437,28 @@
       pendingRemoval: null,
     },
     render(state, local) {
-      const q = local.query.trim().toLowerCase();
-      const visible = state.cameras
-        .filter((cam) => (local.status === "all" ? true : cam.status === local.status))
-        .filter(
-          (cam) =>
-            !q ||
-            cam.name.toLowerCase().indexOf(q) >= 0 ||
-            cam.location.toLowerCase().indexOf(q) >= 0 ||
-            cam.id.toLowerCase().indexOf(q) >= 0,
-        )
-        .sort((a, b) => {
-          if (local.sort === "name") return a.name.localeCompare(b.name);
-          if (local.sort === "status") return a.status.localeCompare(b.status);
-          return a.id.localeCompare(b.id);
-        });
-
       const soloCamera = state.cameras.find((cam) => cam.id === local.solo) || null;
       const pending = state.cameras.find((cam) => cam.id === local.pendingRemoval) || null;
 
+      // The actual video+bbox tiles are owned entirely by live-grid.js and
+      // injected into #live-grid-mount by afterRender() below — this markup
+      // is only ever an empty shell so a rerender never restarts playback.
       const body = soloCamera
-        ? comp.cameraSolo(state, soloCamera, { backAct: "clear-solo" })
+        ? '<div class="stack">' +
+          ui.button({ label: "Back to wall", act: "clear-solo", variant: "ghost", icon: "arrowLeft" }) +
+          '<div id="live-grid-mount" class="live-grid-mount solo"></div>' +
+          "</div>"
         : '<div class="panel filters">' +
-          ui.searchInput({
-            value: local.query,
-            act: "set-query",
-            key: "wall-query",
-            placeholder: "Search feeds by name, id or location",
-            label: "Search cameras",
-          }) +
-          ui.select({
-            act: "set-status",
-            key: "wall-status",
-            value: local.status,
-            className: "w40",
-            ariaLabel: "Filter by status",
-            options: [
-              { value: "all", label: "All statuses" },
-              { value: "active", label: "Active" },
-              { value: "warning", label: "Warning" },
-              { value: "offline", label: "Offline" },
-            ],
-          }) +
-          ui.select({
-            act: "set-sort",
-            key: "wall-sort",
-            value: local.sort,
-            className: "w40",
-            ariaLabel: "Sort cameras",
-            options: [
-              { value: "id", label: "Sort by ID" },
-              { value: "name", label: "Sort by name" },
-              { value: "status", label: "Sort by status" },
-            ],
-          }) +
           '<span class="num small muted">' +
-          visible.length +
-          " / " +
           state.cameras.length +
-          " feeds</span></div>" +
-          (visible.length
-            ? '<div class="wall l' +
-              state.layout +
-              '">' +
-              visible
-                .map((camera) => comp.cameraTile(camera, { removable: true, soloAct: true }))
-                .join("") +
-              "</div>"
-            : '<div class="panel" style="padding:4rem 1.5rem;text-align:center">' +
-              '<p class="small">No feeds match the current filters.</p>' +
-              '<div class="row" style="justify-content:center;margin-top:1rem">' +
-              ui.button({ label: "Clear filters", act: "clear-filters" }) +
-              "</div></div>");
+          " feed(s) — live YOLO detection overlay</span></div>" +
+          '<div id="live-grid-mount" class="live-grid-mount"></div>';
 
       return ui.page({
         title: soloCamera ? soloCamera.name : "Live Wall",
         subtitle: soloCamera
-          ? soloCamera.location + ": single feed focus. Everything else is hidden while this camera is open."
-          : "All registered feeds. Select any feed to isolate it, or add and deregister cameras from the controls below.",
+          ? (soloCamera.location || "") + ": single feed focus with live detection overlay."
+          : "Real camera feeds with live YOLOv8 bounding-box overlays, streamed from the AI runtime.",
         actions: soloCamera
           ? ""
           : ui.button({ label: "Add camera", act: "open-add", variant: "solid", icon: "plus" }) +
@@ -535,29 +492,33 @@
             : ""),
       });
     },
+    // Called by app.js after every innerHTML swap while this page is active.
+    // The placeholder div (#live-grid-mount) is recreated on every rerender,
+    // but live-grid.js keeps its actual <video>/<canvas> nodes in a
+    // permanent host outside #view and just re-tracks the placeholder's
+    // position — mount()/mountSolo() are idempotent, so calling them here
+    // on every rerender is cheap and never restarts video playback.
+    afterRender(view, state, local) {
+      const mountEl = view.querySelector("#live-grid-mount");
+      if (!mountEl) return; // e.g. an add/remove modal is the only thing that changed
+
+      if (local.solo) {
+        window.liveGrid.mountSolo(mountEl, local.solo);
+      } else {
+        window.liveGrid.mount(mountEl, {
+          layout: state.layout,
+          onOpen: (cameraId) => {
+            local.solo = cameraId;
+            window.scrollTo(0, 0);
+            if (window._requestRerender) window._requestRerender();
+          },
+        });
+      }
+    },
+    onLeave() {
+      window.liveGrid.unmount();
+    },
     handlers: Object.assign(cameraFormHandlers(), {
-      "set-query": (el, ev, ctx) => {
-        ctx.local.query = el.value;
-        ctx.rerender();
-      },
-      "set-status": (el, ev, ctx) => {
-        ctx.local.status = el.value;
-        ctx.rerender();
-      },
-      "set-sort": (el, ev, ctx) => {
-        ctx.local.sort = el.value;
-        ctx.rerender();
-      },
-      "clear-filters": (el, ev, ctx) => {
-        ctx.local.query = "";
-        ctx.local.status = "all";
-        ctx.rerender();
-      },
-      "open-camera": (el, ev, ctx) => {
-        ctx.local.solo = el.getAttribute("data-id");
-        window.scrollTo(0, 0);
-        ctx.rerender();
-      },
       "clear-solo": (el, ev, ctx) => {
         ctx.local.solo = null;
         ctx.rerender();

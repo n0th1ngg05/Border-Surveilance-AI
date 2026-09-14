@@ -16,7 +16,7 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { createServer, type Server } from "node:http";
+import type { Server } from "node:http";
 import { Hono } from "hono";
 import { logger as honoLogger } from "hono/logger";
 import { cors } from "hono/cors";
@@ -58,10 +58,11 @@ app.use("*", honoLogger());
 app.use("*", cors({ origin: config.NODE_ENV === "production" ? [] : "*" }));
 app.use("*", prettyJSON());
 
-// ── Static frontend (V1 Tactical HUD) ───────────────────────────────────────
-app.use("/",         serveStatic({ root: "./frontend/V1" }));
-app.use("/css/*",    serveStatic({ root: "./frontend/V1" }));
-app.use("/js/*",     serveStatic({ root: "./frontend/V1" }));
+// ── Static frontend ──────────────────────────────────────────────────────────
+app.use("/",         serveStatic({ root: "./frontend" }));
+app.use("/css/*",    serveStatic({ root: "./frontend" }));
+app.use("/js/*",     serveStatic({ root: "./frontend" }));
+app.use("/assets/*", serveStatic({ root: "./frontend" }));
 // Serve the video files from app/videos
 app.use("/videos/*", serveStatic({ root: "./videos", rewriteRequestPath: (p) => p.replace(/^\/videos/, "") }));
 
@@ -118,10 +119,6 @@ async function boot(): Promise<void> {
     logger.warn("[4/5] ⚠️ MQTT offline — physical edge alerts disabled");
   }
 
-  httpServer = createServer();
-  attachWebSocket(httpServer);
-  logger.info("[5/5] ✅ WebSocket server attached");
-
   // ── Demo / Prototype Mode Initialization ─────────────────────────────────
   if (config.DEMO_MODE) {
     logger.info("🎯 DEMO_MODE=true: Bootstrapping prototype data & live event simulation...");
@@ -129,12 +126,24 @@ async function boot(): Promise<void> {
     startDemoSimulation();
   }
 
-  serve({ fetch: app.fetch, port: config.PORT, serverOptions: {} }, () => {
+  // BUG FIX: attachWebSocket(httpServer) was previously called on a bare
+  // createServer() instance that was never listen()'d — @hono/node-server's
+  // serve() spins up its OWN separate http.Server under the hood and that
+  // second, unrelated server is the one actually bound to config.PORT.
+  // Socket.IO was therefore live but unreachable: no client could ever
+  // connect, and /socket.io/socket.io.js 404'd through Hono's static/404
+  // handler (returned as JSON, hence the MIME-type console error).
+  // Fix: serve() returns the real underlying http.Server — attach
+  // Socket.IO to THAT instance instead of creating a second one.
+  httpServer = serve({ fetch: app.fetch, port: config.PORT, serverOptions: {} }, () => {
     logger.info(`\n🚀 Server running → http://localhost:${config.PORT}`);
     logger.info(`📺 Dashboard      → http://localhost:${config.PORT}/`);
     logger.info(`📡 API            → http://localhost:${config.PORT}/api`);
     logger.info(`🔌 WebSocket      → ws://localhost:${config.PORT}\n`);
-  });
+  }) as unknown as Server;
+
+  attachWebSocket(httpServer);
+  logger.info("[5/5] ✅ WebSocket server attached");
 }
 
 // ── Graceful shutdown ────────────────────────────────────────────────────────
