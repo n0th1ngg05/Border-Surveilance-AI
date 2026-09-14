@@ -12,7 +12,7 @@ This directory contains the complete creative and technical production package f
 | [`01_GEMINI_VEO_PROMPTS.md`](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/01_GEMINI_VEO_PROMPTS.md) | **Production-ready prompts for Google Gemini Veo** (Veo 2 / Veo 3) with exact lens settings, camera moves, lighting, durations, and audio cues for all 7 scenes. |
 | [`02_STORYBOARD_AND_VOICEOVER_SCRIPT.md`](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/02_STORYBOARD_AND_VOICEOVER_SCRIPT.md) | **Complete 70-second launch film screenplay**, including shot-by-shot visual descriptions, word-for-word voiceover script, audio design stems, and transition notes. |
 | [`03_RECORDLY_UI_ANIMATION_SPEC.md`](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/03_RECORDLY_UI_ANIMATION_SPEC.md) | **"Recordly" / Screen Studio motion spec** detailing smooth 3D isometric perspectives, cubic-bezier easing curves, and dynamic zoom coordinates into the real V.I.E.W frontend code. |
-| [`reference_images/`](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/reference_images/) | **6 Ultra-High-Resolution (16:9 Landscape) Reference Images** generated specifically to serve as first-frame and style anchors for Gemini Veo video generation. |
+| [`reference_images/`](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/reference_images/) | **7 Ultra-High-Resolution (16:9 Landscape) Reference Images** generated specifically to serve as first-frame and style anchors for Gemini Veo video generation. |
 
 ---
 
@@ -27,6 +27,12 @@ This directory contains the complete creative and technical production package f
 ### 2. Drone HUD Lock on Infiltrator (Target Classification)
 ![02_drone_hud_thermal_lock.jpg](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/reference_images/02_drone_hud_thermal_lock.jpg)
 *Airborne tactical surveillance drone zooming 24x into the zero-line fence, locking onto the infiltrator with glowing red/yellow bounding box and real-time telemetry.*
+
+---
+
+### 2B. Stationary Edge CCTV Feed (YOLOv11 Detection & Confidence)
+![02b_cctv_border_yolo_detection.jpg](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/reference_images/02b_cctv_border_yolo_detection.jpg)
+*Authentic high-angle CCTV security camera view on a surveillance pole with wide-angle lens, OSD timestamp watermark (`CAM-04 // NORTH-PERIMETER`), and YOLOv11 bounding box with `PERSON: 97.4%` confidence score and `ZONE: VIRTUAL ZERO-LINE BREACH`.*
 
 ---
 

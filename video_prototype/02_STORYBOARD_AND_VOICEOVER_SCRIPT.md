@@ -30,9 +30,9 @@ Cinematic Drone Sweep           Optical to Thermal Zoom         3D Tilt into V.I
 
 | Timestamp | Visual | Audio & SFX | Voiceover (Narrator) |
 | :--- | :--- | :--- | :--- |
-| **00:10 – 00:16** | **Drone Pitch & Optical Zoom:** The drone tilts down steeply toward a blind spot in Sector 4. A hooded figure emerges from desert scrub, rapidly climbing the zero-line fence. | High-speed optical zoom whine. Camera servo motor snaps into focus. | *"Sector 4. Incursion detected at 320 meters."* |
-| **00:16 – 00:20** | **HUD Lock-On:** The view snaps to hybrid Optical/FLIR thermal mode. A razor-sharp neon red and gold bounding box locks onto the climber. Telemetry streams rapidly: `[YOLOv11: 98.6%] [THREAT: CRITICAL] [HEADING: 042° NE]`. | Double target-lock beep (crisp 800Hz). High-frequency digital data chirp. | *"Computer vision identifies the subject in under 24 milliseconds. Classifying posture, velocity, and perimeter intent."* |
-| **00:20 – 00:22** | **Capture & Uplink:** Micro-shutter click. The camera freezes on a high-definition tactical frame. An encrypted telemetry packet graphic flashes: `ENCRYPTED UPLINK → V.I.E.W CORE NODE`. | Shutter snap. Deep sub-bass drop (**"BRAAM"**). Sound of high-speed data transmission. | *"Instant snapshot capture. Zero cloud latency."* |
+| **00:10 – 00:15** | **Drone Pitch & Optical Zoom:** The drone tilts down steeply toward a blind spot in Sector 4. A hooded figure emerges from desert scrub, rapidly climbing the zero-line fence. | High-speed optical zoom whine. Camera servo motor snaps into focus. | *"Sector 4. Incursion detected at 320 meters."* |
+| **00:15 – 00:19** | **Stationary Edge CCTV Feed (CAM-04):** Cut to high-angle pole-mounted CCTV camera. Wide-angle lens captures the fence. YOLOv11 bounding box snaps over the infiltrator with confidence score `PERSON: 97.4% [YOLOv11]` and red tag `ZONE: VIRTUAL ZERO-LINE BREACH`. | Electronic sensor hum. High-frequency digital chirp as confidence tag snaps in. | *"Stationary edge cameras running onboard YOLOv11 classify posture, trajectory, and breach velocity."* |
+| **00:19 – 00:23** | **Drone HUD Lock & Capture:** Drone HUD locks with FLIR thermal overlay: `[YOLOv11: 98.6%] [THREAT: CRITICAL]`. Shutter clicks. Captured tactical frame freezes with encrypted telemetry: `ENCRYPTED UPLINK → V.I.E.W CORE NODE`. | Double target-lock beep (crisp 800Hz). Shutter snap. Deep sub-bass drop (**"BRAAM"**). | *"Instant snapshot capture. Sent directly to the central command node."* |
 
 ---
 

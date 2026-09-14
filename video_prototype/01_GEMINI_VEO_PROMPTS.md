@@ -51,6 +51,25 @@ Point-of-view shot from an airborne tactical surveillance drone camera pitching 
 
 ---
 
+## Scene 2B: Stationary CCTV Border Feed & YOLOv11 Model Detection
+
+![Scene 2B Reference](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/reference_images/02b_cctv_border_yolo_detection.jpg)
+
+### Prompt:
+```text
+Authentic high-angle stationary pole-mounted CCTV security camera footage monitoring a remote border perimeter fence and patrol road at dawn. The camera view has a realistic wide-angle surveillance lens distortion with slight edge vignette and an on-screen digital watermark in the upper-left corner: "CAM-04 // NORTH-PERIMETER // 05:42:19 IST". A lone hooded infiltrator in dark clothing scrambles over the chain-link and barbed wire zero-line fence. Real-time YOLOv11 computer vision inference is active on the stream: an ultra-crisp neon-yellow and flashing red AI bounding box tracks the intruder smoothly across the fence. Directly above the bounding box, sharp digital labels and confidence metrics update in real-time: "PERSON: 97.4% [YOLOv11]" and a bold crimson alert flag "ZONE: VIRTUAL ZERO-LINE BREACH". Realistic CCTV sensor noise, digital compression artifacts, high dynamic range morning light hitting the fence line, 60fps surveillance video cadence, hyper-realistic military defense surveillance aesthetic.
+```
+
+### Veo Configuration Parameters:
+- **Duration:** 5 seconds
+- **Camera Movement:** Static High-Angle Surveillance Pole Mount with Subtle Mechanical Wind Sway
+- **Motion Speed:** Natural Infiltrator Motion (Scale: 6/10)
+- **Reference Image:** `02b_cctv_border_yolo_detection.jpg` (Used as Starting Frame)
+- **Negative Prompt:** `shaky handheld camera, cinematic panning, Hollywood explosions, 3D CGI cartoon, smooth cinematic blur, low resolution, warped fence`
+- **Sound Design Cue:** Low ambient morning desert breeze, faint electronic camera sensor hum, rhythmic high-pitch AI detection ping as the confidence score appears (97.4%).
+
+---
+
 ## Scene 3: Transition & Recordly 3D UI Ingestion
 
 ![Scene 3 Reference](file:///c:/Users/mizan/OneDrive/Desktop/Border-Survelliance_AI/video_prototype/reference_images/03_view_ui_recordly_zoom.jpg)
