@@ -86,6 +86,7 @@ const handlers = {
     frameCounter = p.frame_index || frameCounter + 3;
     Hud.bumpFrame(frameCounter);
     $('#ss-frames').textContent = `FRM ${String(frameCounter).padStart(7, '0')} · PIPE A`;
+    if (p.detections) Hud.pushBboxes(p.camera_id, p.detections, p.frame_width, p.frame_height, 'human');
     UI.flashMini(p.camera_id);
     const person = UI.store?.personnel?.find(x => x.serviceNumber === p.entity_id);
     if (person) person.lastVerified = 'Just now';
@@ -97,6 +98,7 @@ const handlers = {
     frameCounter = p.frame_index || frameCounter + 3;
     Hud.bumpFrame(frameCounter);
     $('#ss-frames').textContent = `FRM ${String(frameCounter).padStart(7, '0')} · PIPE B`;
+    if (p.detections) Hud.pushBboxes(p.camera_id, p.detections, p.frame_width, p.frame_height, 'vehicle');
     UI.flashMini(p.camera_id);
     if (p.verified) toast(p.message || 'ANPR verified', 'ok', `${p.entity_id} · ${(p.confidence * 100).toFixed(0)}% OCR`);
     else {

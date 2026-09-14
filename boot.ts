@@ -43,6 +43,7 @@ import vehicleRoutes  from "./src/routes/vehicles.js";
 import zoneRoutes     from "./src/routes/zones.js";
 import authRoutes     from "./src/routes/auth.js";
 import healthRoutes   from "./src/routes/health.js";
+import aiEventRoutes  from "./src/routes/aiEvent.js";
 
 import demoRoutes     from "./src/routes/demo.js";
 import { bootstrapDemoDatabase, startDemoSimulation } from "./src/services/demoMode.js";
@@ -57,15 +58,18 @@ app.use("*", honoLogger());
 app.use("*", cors({ origin: config.NODE_ENV === "production" ? [] : "*" }));
 app.use("*", prettyJSON());
 
-// ── Static frontend ──────────────────────────────────────────────────────────
-app.use("/",      serveStatic({ root: "./frontend" }));
-app.use("/css/*", serveStatic({ root: "./frontend" }));
-app.use("/js/*",  serveStatic({ root: "./frontend" }));
+// ── Static frontend (V1 Tactical HUD) ───────────────────────────────────────
+app.use("/",         serveStatic({ root: "./frontend/V1" }));
+app.use("/css/*",    serveStatic({ root: "./frontend/V1" }));
+app.use("/js/*",     serveStatic({ root: "./frontend/V1" }));
+// Serve the video files from app/videos
+app.use("/videos/*", serveStatic({ root: "./videos", rewriteRequestPath: (p) => p.replace(/^\/videos/, "") }));
 
 // ── Public routes ────────────────────────────────────────────────────────────
-app.route("/api/auth",   authRoutes);
-app.route("/api/health", healthRoutes);
-app.route("/api/demo",   demoRoutes);
+app.route("/api/auth",     authRoutes);
+app.route("/api/health",   healthRoutes);
+app.route("/api/demo",     demoRoutes);
+app.route("/api/ai-event", aiEventRoutes);  // Python AI runtime → no auth needed
 
 // ── Protected routes ─────────────────────────────────────────────────────────
 app.use("/api/*", authMiddleware);

@@ -110,6 +110,16 @@ export const demoStore = {
       resolution: "1920x1080 (HD Starlight Night-Vision)",
       feedType: "optical" as const,
     },
+    {
+      id: "cam-05",
+      name: "Forward Post Alpha — Gate South",
+      location: "Grid Ref 32.68N 74.79E (South Entry)",
+      rtsp_url: "rtsp://192.168.1.105:554/live/gate_south",
+      status: "active" as const,
+      fps: 30,
+      resolution: "1920x1080 (Optical)",
+      feedType: "optical" as const,
+    },
   ],
 
   zones: [

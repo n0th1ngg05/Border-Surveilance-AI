@@ -1,56 +1,112 @@
 """
 runtime/pipelines/vehicle_detection.py
-Pipeline B — Vehicle Detection + Classification + ANPR.
-Processes every (n+1)th frame (slot 1).
 
-Flow:
-  Frame → YOLOv8 vehicle detect → Military type classifier →
-  Plate region detect → Perspective correct → Upscale →
-  PaddleOCR → Registry DB lookup → Publish to Redis
+Pipeline B — Vehicle Detection + Classification.
+Runs on every frame where (frame_index % 3 == 1).
+
+Model : YOLOv8n (COCO)
+Target classes : car(2), motorcycle(3), bus(5), truck(7)
+Device : CUDA (GPU)
+
+Publishes to Node.js via http_publisher.
+Pattern detection (virtual_fence) is skipped for prototype.
 """
 
 import logging
-from services.redis_publisher import publish_vehicle_event, publish_alert
+import torch
+from ultralytics import YOLO
+
+from services.http_publisher import publish_vehicle_event, publish_alert
 
 log = logging.getLogger("pipeline.vehicle")
 
+# COCO vehicle class IDs
+VEHICLE_CLASSES = [2, 3, 5, 7]  # car, motorcycle, bus, truck
+VEHICLE_LABELS  = {2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}
+
+# Map COCO labels → tactical classification for the HUD
+TACTICAL_TYPE = {
+    "car":        "Patrol",
+    "motorcycle": "Patrol",
+    "bus":        "Transport",
+    "truck":      "Transport",
+}
+
+CONF_THRESHOLD = 0.40
+
 
 class VehicleDetectionPipeline:
-    def __init__(self):
-        # TODO: Load models
-        # self.vehicle_detector = YOLO("weights/yolov8n_vehicle.pt")
-        # self.plate_detector   = YOLO("weights/yolov8n_plate.pt")
-        # self.ocr              = PaddleOCR(use_gpu=True, lang="en")
-        log.info("VehicleDetectionPipeline initialised [models not yet loaded]")
+    def __init__(self, model_path: str, device: str = "cuda"):
+        log.info(f"Loading YOLO model for vehicle detection from {model_path} on {device}")
+        self.model = YOLO(model_path)
+        self.device = device
+        # Warm-up pass
+        dummy = torch.zeros((1, 3, 640, 640), device=device)
+        self.model(dummy, verbose=False)
+        log.info("VehicleDetectionPipeline ready ✅")
 
-    async def process(self, frame, camera_id: str):
+    async def process(self, frame, camera_id: str, camera_name: str, frame_index: int) -> None:
         """
-        TODO: implement full pipeline
+        Run YOLOv8n vehicle detection on a single BGR frame.
+        Publishes event payload to Node.js if any vehicles found.
         """
-        log.debug(f"[{camera_id}] Vehicle pipeline processing frame [PLACEHOLDER]")
+        try:
+            results = self.model(
+                frame,
+                classes=VEHICLE_CLASSES,
+                conf=CONF_THRESHOLD,
+                device=self.device,
+                verbose=False,
+            )
+        except Exception as e:
+            log.error(f"[{camera_id}] Vehicle inference error: {e}")
+            return
 
-        # Step 1: Detect vehicles
-        # vehicles = self.vehicle_detector(frame)
+        detections = []
+        for r in results:
+            for box in r.boxes:
+                x1, y1, x2, y2 = [float(v) for v in box.xyxy[0]]
+                conf = float(box.conf[0])
+                cls  = int(box.cls[0])
+                label = VEHICLE_LABELS.get(cls, "vehicle")
+                detections.append({
+                    "bbox":           [round(x1), round(y1), round(x2), round(y2)],
+                    "confidence":     round(conf, 3),
+                    "label":          label,
+                    "tactical_type":  TACTICAL_TYPE.get(label, "Combat"),
+                })
 
-        # Step 2: Classify military type (Combat/Transport/Patrol)
-        # vehicle_type = classify(vehicle_crop)
+        if not detections:
+            return
 
-        # Step 3: Detect number plate region
-        # plate_bbox = self.plate_detector(vehicle_crop)
+        h, w = frame.shape[:2]
+        # Generate a fake plate for demo (no real OCR yet)
+        fake_plate = f"XX-{(frame_index % 9999):04d}-YY"
 
-        # Step 4: Crop + perspective correction (homography)
-        # plate_crop = correct_perspective(frame, plate_bbox)
+        payload = {
+            "camera_id":    camera_id,
+            "camera_name":  camera_name,
+            "frame_index":  frame_index,
+            "frame_width":  w,
+            "frame_height": h,
+            "detections":   detections,
+            "verified":     False,        # No ANPR/OCR yet in demo
+            "entity_id":    fake_plate,
+            "model":        detections[0]["tactical_type"] + " vehicle",
+            "message":      f"Vehicle detected — {len(detections)} unit(s) in frame",
+        }
 
-        # Step 5: Upscale (Lanczos)
-        # plate_upscaled = cv2.resize(plate_crop, ..., interpolation=cv2.INTER_LANCZOS4)
+        await publish_vehicle_event(payload)
+        log.debug(f"[{camera_id}] Vehicle event published — {len(detections)} vehicle(s) @ frame {frame_index}")
 
-        # Step 6: OCR
-        # plate_text = self.ocr.ocr(plate_upscaled)
-
-        # Step 7: DB lookup + verification
-        # verified, db_type = lookup_vehicle(plate_text)
-
-        # Step 8: Publish
-        # await publish_vehicle_event({...})
-
-        pass
+        # Flagged alert for unverified vehicle
+        if any(d["confidence"] > 0.70 for d in detections):
+            await publish_alert({
+                "level":       "MEDIUM",
+                "module":      "VEHICLE",
+                "camera_id":   camera_id,
+                "camera_name": camera_name,
+                "entity_id":   fake_plate,
+                "message":     f"⚠️ ANPR FLAG: Unregistered vehicle — {camera_name}",
+                "frame_index": frame_index,
+            })

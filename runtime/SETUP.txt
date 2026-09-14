@@ -1,0 +1,112 @@
+════════════════════════════════════════════════════════════════
+  V.I.E.W — Python AI Runtime — SETUP GUIDE
+  RTX 4050 Laptop GPU · CUDA 12.x · YOLOv8n
+════════════════════════════════════════════════════════════════
+
+STEP 1 — Create the virtual environment
+──────────────────────────────────────────────────────────────
+  cd app/runtime
+  python -m venv venv
+
+STEP 2 — Activate the venv
+──────────────────────────────────────────────────────────────
+  Windows PowerShell:
+    .\venv\Scripts\Activate.ps1
+
+  Windows CMD:
+    .\venv\Scripts\activate.bat
+
+STEP 3 — Install PyTorch with CUDA 12.1 (RTX 4050 — MUST do this FIRST)
+──────────────────────────────────────────────────────────────
+  pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+  ⚠ This downloads ~2.5 GB — run it separately before the next step.
+
+STEP 4 — Install the rest of the dependencies
+──────────────────────────────────────────────────────────────
+  pip install -r requirements.txt
+
+STEP 5 — Download YOLOv8n model
+──────────────────────────────────────────────────────────────
+  Create the models folder at:
+    app/models/
+
+  Then either:
+    a) Run Python (with venv active):
+         python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+       This auto-downloads yolov8n.pt to the Ultralytics cache.
+       Then copy it:
+         copy %USERPROFILE%\.ultralytics\assets\yolov8n.pt ..\models\yolov8n.pt
+
+    b) Or download directly from:
+         https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n.pt
+       and save to:  app/models/yolov8n.pt
+
+STEP 6 — Add video sources
+──────────────────────────────────────────────────────────────
+  Videos are already configured in:
+    app/runtime/sources.json
+
+  The 5 stock border videos are at:
+    videos/stock/border/1.mp4  →  cam-01
+    videos/stock/border/2.mp4  →  cam-02
+    videos/stock/border/3.mp4  →  cam-03
+    videos/stock/border/4.mp4  →  cam-04
+    videos/stock/border/5.mp4  →  cam-05
+
+  To add a new camera/video:
+    → Edit sources.json, add a new entry to the "sources" array
+    → Set "enabled": true
+    → Restart uvicorn — no code changes needed
+
+════════════════════════════════════════════════════════════════
+  RUNNING THE PROTOTYPE
+════════════════════════════════════════════════════════════════
+
+Terminal 1 — Node.js backend + frontend:
+  cd app
+  pnpm dev
+  → Open http://localhost:3000
+
+Terminal 2 — Python AI runtime (with venv active):
+  cd app/runtime
+  .\venv\Scripts\Activate.ps1
+  uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  Verify it's running:
+  → http://localhost:8000/health
+  → http://localhost:8000/sources
+  → http://localhost:8000/pipelines/status
+
+════════════════════════════════════════════════════════════════
+  ENV VARIABLES (optional overrides)
+════════════════════════════════════════════════════════════════
+
+  YOLO_DEVICE   = cuda | cpu | 0      (default: cuda)
+  INFER_EVERY   = 5                   (run inference every Nth frame, default: 5)
+  NODE_URL      = http://localhost:3000  (where to POST events)
+
+  Set in PowerShell:
+    $env:YOLO_DEVICE = "cuda"
+    $env:INFER_EVERY = "3"
+
+════════════════════════════════════════════════════════════════
+  WHAT HAPPENS WHEN RUNNING
+════════════════════════════════════════════════════════════════
+
+  1. Python loads YOLOv8n onto your RTX 4050
+  2. All 5 videos play simultaneously in a looping inference loop
+  3. Every 5th frame per camera:
+       frame_index % 3 == 0  →  Person detection  → event:human → HUD
+       frame_index % 3 == 1  →  Vehicle detection → event:vehicle → HUD
+       frame_index % 3 == 2  →  Skipped (pattern — not implemented yet)
+  4. Detections POST to Node.js /api/ai-event
+  5. Node.js fires event over Socket.IO to browser
+  6. Browser renders live detections on your tactical HUD:
+       - YOLO bounding boxes appear dynamically on the active camera's HUD canvas
+       - Yellow corner brackets + label chips = detected persons
+       - Red corner brackets + label chips = detected vehicles
+       - Sensor node tiles flash when detections trigger on their camera
+  7. High-confidence detections also appear in the Incident Feed
+
+  To add or change cameras/videos: edit app/runtime/sources.json only.

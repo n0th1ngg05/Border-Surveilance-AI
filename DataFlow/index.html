@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>V.I.E.W — System Architecture &amp; Technical Reference</title>
+  <meta name="description" content="Interactive architecture visualization for the V.I.E.W (Virtual Intelligence & Enhanced Watch) border surveillance backend system. Explore the topology, data flow, alert dispatch pipeline, boot sequence, and REST API map." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════ HEADER ═══════ -->
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="logo-icon">V</div>
+      <div>
+        <h1>V.I.E.W</h1>
+        <div class="subtitle">SYSTEM ARCHITECTURE REFERENCE</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="header-clock" style="font-family: var(--font-mono); letter-spacing: 1px;">--:--:-- IST</span>
+      <span class="badge badge-demo">DEMO MODE</span>
+      <span class="badge badge-version">v2.0.26 · SIH-26187</span>
+    </div>
+  </header>
+
+  <!-- ═══════ TAB BAR ═══════ -->
+  <nav class="tab-bar" id="tab-bar">
+    <!-- Rendered by app.js -->
+  </nav>
+
+  <!-- ═══════ MAIN BODY ═══════ -->
+  <div class="app-body">
+
+    <!-- Canvas (flowchart area) -->
+    <div class="canvas-wrapper">
+      <div class="canvas-container">
+        <div class="canvas-inner" id="canvas-inner">
+          <!-- Nodes, connections, groups rendered here by app.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Panel (right sidebar) -->
+    <aside class="detail-panel" id="detail-panel">
+      <!-- Populated by app.js on node click -->
+    </aside>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>

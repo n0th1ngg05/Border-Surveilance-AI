@@ -1,0 +1,59 @@
+{
+  "_comment": "V.I.E.W — Video source registry. Add any new video source here and restart the runtime. No code changes needed.",
+  "_schema": {
+    "id": "Unique camera ID (used as key across backend + frontend)",
+    "name": "Display name shown in HUD",
+    "location": "Grid reference or physical description",
+    "video_path": "Path to MP4 file — relative to THIS sources.json, or absolute",
+    "feed_type": "optical | thermal | ir",
+    "fps_target": "Target FPS cap for inference loop (set lower on slow hardware)",
+    "enabled": "Set false to skip this source without deleting it"
+  },
+  "sources": [
+    {
+      "id": "cam-01",
+      "name": "Sector 4 — North Border Fence",
+      "location": "Grid Ref 32.74N 74.88E (Forward Post Alpha)",
+      "video_path": "../videos/1.mp4",
+      "feed_type": "thermal",
+      "fps_target": 15,
+      "enabled": true
+    },
+    {
+      "id": "cam-02",
+      "name": "Checkpost Alpha — Main Access Gate",
+      "location": "Grid Ref 32.72N 74.85E (Gate 1)",
+      "video_path": "../videos/2.mp4",
+      "feed_type": "optical",
+      "fps_target": 15,
+      "enabled": true
+    },
+    {
+      "id": "cam-03",
+      "name": "Tower Bravo — Riverine Basin Overlook",
+      "location": "Grid Ref 32.76N 74.91E (Observation Tower 2)",
+      "video_path": "../videos/3.mp4",
+      "feed_type": "ir",
+      "fps_target": 15,
+      "enabled": true
+    },
+    {
+      "id": "cam-04",
+      "name": "Patrol Corridor Charlie — Ridge Perimeter",
+      "location": "Grid Ref 32.70N 74.82E (Patrol Post Delta)",
+      "video_path": "../videos/4.mp4",
+      "feed_type": "optical",
+      "fps_target": 15,
+      "enabled": true
+    },
+    {
+      "id": "cam-05",
+      "name": "Forward Post Alpha — Gate South",
+      "location": "Grid Ref 32.68N 74.79E (South Entry)",
+      "video_path": "../videos/5.mp4",
+      "feed_type": "optical",
+      "fps_target": 15,
+      "enabled": true
+    }
+  ]
+}

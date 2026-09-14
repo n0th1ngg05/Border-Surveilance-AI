@@ -294,6 +294,58 @@ const Hud = (() => {
     'cam-04': { accent: '#e8b931', zone: 'RIDGE BUFFER CORRIDOR', targets: 2 },
   };
 
+  /* ── YOLO bbox store ────────────────────────────────────────────────────
+   * Keyed by camera_id. Each entry expires after 2s so stale boxes clear
+   * automatically without needing an explicit cleanup call.
+   * { detections, frameWidth, frameHeight, type, expireAt }
+   * ────────────────────────────────────────────────────────────────────── */
+  const bboxStore = {};
+
+  function drawBboxOverlay(ctx, w, h, camId) {
+    const entry = bboxStore[camId];
+    if (!entry || Date.now() > entry.expireAt) return;
+    const { detections, frameWidth, frameHeight, type } = entry;
+    if (!detections || !detections.length) return;
+
+    const scaleX = w / (frameWidth  || w);
+    const scaleY = h / (frameHeight || h);
+    const color  = type === 'human' ? '#FFD600' : '#FF4136';
+
+    detections.forEach(det => {
+      const [x1, y1, x2, y2] = det.bbox;
+      const rx = x1 * scaleX, ry = y1 * scaleY;
+      const rw = (x2 - x1) * scaleX, rh = (y2 - y1) * scaleY;
+      if (rw < 4 || rh < 4) return;
+      const ck = Math.min(rw, rh) * 0.18;
+
+      // Main bbox rect
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.92;
+      ctx.strokeRect(rx, ry, rw, rh);
+
+      // Corner brackets (tactical style)
+      ctx.lineWidth = 2.5; ctx.beginPath();
+      ctx.moveTo(rx,        ry + ck); ctx.lineTo(rx,      ry); ctx.lineTo(rx + ck, ry);
+      ctx.moveTo(rx+rw-ck,  ry);      ctx.lineTo(rx+rw,   ry); ctx.lineTo(rx+rw,   ry + ck);
+      ctx.moveTo(rx,        ry+rh-ck);ctx.lineTo(rx,      ry+rh);ctx.lineTo(rx+ck,  ry+rh);
+      ctx.moveTo(rx+rw-ck,  ry+rh);   ctx.lineTo(rx+rw,   ry+rh);ctx.lineTo(rx+rw,  ry+rh-ck);
+      ctx.stroke();
+
+      // Label chip
+      const conf = det.confidence ? (det.confidence * 100).toFixed(0) + '%' : '';
+      const lbl  = (det.tactical_type || det.label || type).toUpperCase() + (conf ? ' · ' + conf : '');
+      ctx.font   = `bold ${Math.max(8, w * 0.013)}px "JetBrains Mono", monospace`;
+      const tw   = ctx.measureText(lbl).width;
+      const chipH = Math.max(13, w * 0.018);
+      const chipY = Math.max(0, ry - chipH - 2);
+      ctx.fillStyle = color; ctx.globalAlpha = 0.95;
+      ctx.fillRect(rx, chipY, tw + 8, chipH);
+      ctx.fillStyle = '#000'; ctx.globalAlpha = 1;
+      ctx.fillText(lbl, rx + 4, chipY + chipH - 3);
+      ctx.restore();
+    });
+  }
+
   class Scene {
     constructor(canvas, camId, mini = false) {
       this.cv = canvas; this.ctx = canvas.getContext('2d');
@@ -393,6 +445,9 @@ const Hud = (() => {
       // noise flicker
       ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.012})`;
       ctx.fillRect(0, 0, w, h);
+
+      // Real YOLO bbox overlay
+      drawBboxOverlay(ctx, w, h, this.camId);
     }
   }
 
@@ -426,6 +481,15 @@ const Hud = (() => {
     bumpFrame(n) {
       const el = $('#feed-frame');
       if (el && n) el.textContent = 'FRM ' + String(n).padStart(7, '0');
+    },
+    pushBboxes(cameraId, detections, frameWidth, frameHeight, type) {
+      bboxStore[cameraId] = {
+        detections: detections || [],
+        frameWidth: frameWidth || 640,
+        frameHeight: frameHeight || 640,
+        type: type || 'human',
+        expireAt: Date.now() + 2000,
+      };
     },
   };
 })();
