@@ -1075,49 +1075,45 @@ tbody tr:hover {
   min-height: 32rem;
 }
 
-/* Compact preview used on the Overview dashboard panel — narrower column
-   than the full #/monitor page.
-   BUG FIX (see live-grid.js syncHostClass for the full explanation): the
-   actual <video>/<canvas> grid lives under the permanent #live-grid-host
-   element appended to <body>, NOT inside #live-grid-mount — the mount div
-   is just a positioning reference that gets tracked, never a real parent.
-   A selector like ".live-grid-mount.overview-preview .wall.l2x2" can
-   never match anything for that reason; live-grid.js now mirrors the
-   mount placeholder's modifier class onto #live-grid-host itself, so we
-   target it directly here instead.
-   Root problem this fixes: .wall.l2x2's default minmax(22rem, 1fr)
-   auto-fit columns are wider than this panel can actually show, so tiles
-   overflowed horizontally — each one still got aspect-ratio 16/9 height
-   for that oversized width, leaving only a thin sliver of each tile
-   visible (the "ribbon" look), with 3 wide tiles fitting per row instead
-   of a clean 2x2. Force exactly 2 fixed-width columns that fit the panel,
-   and give tiles an explicit height instead of deriving it from column
-   width via aspect-ratio. */
-#live-grid-host.overview-preview .wall.l2x2 {
+/* ── Overview dashboard — monitor wall compact preview ──────────────────────
+   The live-grid host is position:fixed and tracked to overlay the placeholder.
+   We use class "overview-preview" mirrored onto #live-grid-host (see
+   live-grid.js syncHostClass) so CSS can reach the portalled grid.
+
+   With 6 cameras in a 3-column layout we need:
+     - 3 equal columns that fill the host width
+     - 2 rows at a fixed height (no aspect-ratio distortion in tiny panels)
+     - internal y-scrolling so extra cameras never overflow the panel boundary
+     - the placeholder min-height must match exactly 2 rows + 1 gap so the
+       page layout reserves the right amount of space               */
+
+#live-grid-host.overview-preview .live-wall {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: 8rem;
-  gap: 0.6rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 7.5rem;
+  gap: 0.5rem;
+  height: auto !important; /* beats #live-grid-host .live-wall { height:100% } */
+  align-content: start;
 }
-#live-grid-host.overview-preview .wall.l2x2 .live-shot {
+
+#live-grid-host.overview-preview .live-shot {
   aspect-ratio: auto;
   width: 100%;
   height: 100%;
 }
-/* BUG FIX: #live-grid-host tracks a pixel height copied every frame from
-   the placeholder's own rect (see trackPlaceholder() in live-grid.js),
-   and #live-grid-host has overflow: auto — so if the placeholder is
-   shorter than the grid actually rendered inside the host, the extra
-   rows get clipped into an internal scrollbar instead of the panel just
-   showing them. With 4 cameras in a 2-column grid that's 2 rows of 8rem
-   plus one 0.6rem gap between them: (8rem * 2) + 0.6rem = 16.6rem. Match
-   the placeholder's min-height to that exactly instead of an arbitrary
-   smaller guess. If the camera count or grid-auto-rows above ever
-   changes, this value needs to change with it. */
-.live-grid-mount.overview-preview {
-  min-height: 16.6rem;
+
+/* Host scrolls internally — tiles beyond 2 rows are accessible by scroll */
+#live-grid-host.overview-preview {
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
+/* Placeholder reserves exactly 2 rows + 1 gap: (7.5rem × 2) + 0.5rem = 15.5rem */
+.live-grid-mount.overview-preview {
+  min-height: 15.5rem;
+}
+
+/* Global host overflow — needed by both overview-preview and the full monitor wall */
 #live-grid-host {
   overflow: auto;
 }

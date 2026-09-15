@@ -47,6 +47,7 @@ import aiEventRoutes  from "./src/routes/aiEvent.js";
 
 import demoRoutes     from "./src/routes/demo.js";
 import { bootstrapDemoDatabase, startDemoSimulation } from "./src/services/demoMode.js";
+import { spawn } from "node:child_process";
 
 // ── App ─────────────────────────────────────────────────────────────────────
 const app = new Hono();
@@ -65,6 +66,49 @@ app.use("/js/*",     serveStatic({ root: "./frontend" }));
 app.use("/assets/*", serveStatic({ root: "./frontend" }));
 // Serve the video files from app/videos
 app.use("/videos/*", serveStatic({ root: "./videos", rewriteRequestPath: (p) => p.replace(/^\/videos/, "") }));
+
+// ── RTSP → MJPEG proxy for IP camera (cam-06) ───────────────────────────────
+// Browsers cannot play rtsp:// natively, so we use FFmpeg to transcode the
+// RTSP stream into an MJPEG multipart stream that any <img> tag can consume.
+const RTSP_URL  = "rtsp://user:user@192.168.1.110:554/cam/realmonitor";
+const BOUNDARY  = "viewframe";
+
+app.get("/stream/cam-06", (c) => {
+  c.header("Content-Type", `multipart/x-mixed-replace; boundary=${BOUNDARY}`);
+  c.header("Cache-Control", "no-cache, no-store");
+  c.header("Connection", "keep-alive");
+
+  const ffmpeg = spawn("ffmpeg", [
+    "-rtsp_transport", "tcp",
+    "-i",              RTSP_URL,
+    "-vf",             "scale=960:540",          // downscale for bandwidth
+    "-q:v",            "5",                       // JPEG quality 1=best 31=worst
+    "-f",              "mpjpeg",
+    "-boundary_tag",   BOUNDARY,
+    "-an",                                        // no audio
+    "pipe:1",
+  ], { stdio: ["ignore", "pipe", "ignore"] });
+
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+
+  ffmpeg.stdout.on("data", (chunk: Buffer) => {
+    writer.write(chunk).catch(() => ffmpeg.kill());
+  });
+  ffmpeg.on("close", () => writer.close().catch(() => {}));
+
+  // Kill FFmpeg when the client disconnects
+  c.req.raw.signal?.addEventListener("abort", () => { ffmpeg.kill(); });
+
+  return new Response(readable as unknown as BodyInit, {
+    status: 200,
+    headers: {
+      "Content-Type": `multipart/x-mixed-replace; boundary=${BOUNDARY}`,
+      "Cache-Control": "no-cache, no-store",
+      "Connection":    "keep-alive",
+    },
+  });
+});
 
 // ── Public routes ────────────────────────────────────────────────────────────
 app.route("/api/auth",     authRoutes);

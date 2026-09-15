@@ -112,18 +112,59 @@
       (camera.feedType === "thermal" ? " thermal" : "") +
       (camera.status === "warning" ? " warning" : "");
 
-    const video = document.createElement("video");
-    video.src = window.LIVE.videoUrl(camera.id);
-    video.autoplay = true;
-    video.loop = true;
-    video.muted = true;
-    video.playsInline = true;
-    video.className = "live-video";
+    const isRtsp = window.LIVE && window.LIVE.isRtspCamera && window.LIVE.isRtspCamera(camera.id);
+    let video = null;
+    let imgEl = null;
+
+    if (isRtsp) {
+      // IP camera — use <img> fed by the server-side MJPEG proxy.
+      // The MJPEG stream is delivered as multipart/x-mixed-replace, which
+      // all major browsers handle natively via a plain <img> src.
+      imgEl = document.createElement("img");
+      imgEl.src = window.LIVE.videoUrl(camera.id);
+      imgEl.className = "live-video";               // same CSS as video
+      imgEl.style.objectFit = "cover";
+      imgEl.style.width = "100%";
+      imgEl.style.height = "100%";
+      imgEl.alt = camera.name + " live feed";
+
+      // Overlay shown while connecting or if stream is unreachable
+      const overlay = document.createElement("div");
+      overlay.className = "rtsp-overlay";
+      overlay.innerHTML =
+        '<span class="num xsmall" style="opacity:0.6">⬤ CONNECTING TO IP CAM...</span>';
+      overlay.style.cssText =
+        "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;" +
+        "background:#000;z-index:1;transition:opacity 0.3s;";
+
+      imgEl.onload = () => { overlay.style.opacity = "0"; overlay.style.pointerEvents = "none"; };
+      imgEl.onerror = () => {
+        overlay.style.opacity = "1";
+        overlay.style.pointerEvents = "auto";
+        overlay.innerHTML =
+          '<span class="num xsmall" style="opacity:0.55">⬤ IP CAM UNREACHABLE</span>';
+        // Retry after 5 seconds
+        setTimeout(() => {
+          overlay.innerHTML = '<span class="num xsmall" style="opacity:0.6">⬤ CONNECTING TO IP CAM...</span>';
+          imgEl.src = window.LIVE.videoUrl(camera.id) + "?t=" + Date.now();
+        }, 5000);
+      };
+
+      shot.appendChild(overlay);
+      shot.appendChild(imgEl);
+    } else {
+      video = document.createElement("video");
+      video.src = window.LIVE.videoUrl(camera.id);
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.className = "live-video";
+      shot.appendChild(video);
+    }
 
     const canvas = document.createElement("canvas");
     canvas.className = "live-canvas";
-
-    shot.appendChild(video);
     shot.appendChild(canvas);
 
     const badgeTl = document.createElement("span");
@@ -134,7 +175,13 @@
 
     const badgeTr = document.createElement("span");
     badgeTr.className = "cam-badge tr";
-    badgeTr.innerHTML = '<span class="dot bg-accent live-dot"></span><span class="num">LIVE</span>';
+    if (isRtsp) {
+      // Show a distinct "IP·RTSP" badge so it's clear this is a real IP camera
+      badgeTr.innerHTML =
+        '<span class="dot bg-accent live-dot"></span><span class="num">IP·RTSP</span>';
+    } else {
+      badgeTr.innerHTML = '<span class="dot bg-accent live-dot"></span><span class="num">LIVE</span>';
+    }
     shot.appendChild(badgeTr);
 
     const caption = document.createElement("span");
@@ -158,12 +205,14 @@
 
     wrap.appendChild(shot);
 
-    video.play().catch(() => {
-      /* Autoplay can be blocked before first user gesture — video.muted
-         should satisfy the browser policy, but ignore failures quietly. */
-    });
+    if (video) {
+      video.play().catch(() => {
+        /* Autoplay can be blocked before first user gesture — video.muted
+           should satisfy the browser policy, but ignore failures quietly. */
+      });
+    }
 
-    return { wrap, shot, video, canvas, ctx: canvas.getContext("2d"), boxes: [] };
+    return { wrap, shot, video: video || imgEl, canvas, ctx: canvas.getContext("2d"), boxes: [], isRtsp };
   }
 
   function resizeCanvas(tile) {
@@ -202,8 +251,12 @@
       // Scale from the source frame's pixel space to this tile's CSS size.
       // Fall back to a native-video-size guess if the payload had no
       // frame_width/height (e.g. demo-ticker events with no real bbox).
-      const srcW = b.frameWidth || tile.video.videoWidth || tile.cssW;
-      const srcH = b.frameHeight || tile.video.videoHeight || tile.cssH;
+      // For <img> MJPEG tiles, use naturalWidth/naturalHeight instead of videoWidth.
+      const el = tile.video;
+      const elW = el ? (el.videoWidth || el.naturalWidth || 0) : 0;
+      const elH = el ? (el.videoHeight || el.naturalHeight || 0) : 0;
+      const srcW = b.frameWidth || elW || tile.cssW;
+      const srcH = b.frameHeight || elH || tile.cssH;
       const sx = tile.cssW / srcW;
       const sy = tile.cssH / srcH;
 
@@ -307,9 +360,17 @@
 
   function clearTiles() {
     tiles.forEach((tile) => {
-      tile.video.pause();
-      tile.video.removeAttribute("src");
-      tile.video.load();
+      if (tile.isRtsp) {
+        // RTSP tiles use <img> — just clear src to stop the MJPEG request
+        if (tile.video) tile.video.src = "";
+      } else {
+        // Video tiles: stop playback fully
+        if (tile.video) {
+          tile.video.pause();
+          tile.video.removeAttribute("src");
+          tile.video.load();
+        }
+      }
     });
     tiles.clear();
     if (hostEl) hostEl.innerHTML = "";
@@ -351,7 +412,7 @@
     hostEl.appendChild(grid);
 
     cameras.forEach((camera) => {
-      const tile = buildTile(camera, { onOpen: o.onOpen });
+      const tile = buildTile(camera, { onOpen: o.onOpen, compact: o.compact });
       grid.appendChild(tile.wrap);
       tiles.set(camera.id, tile);
     });

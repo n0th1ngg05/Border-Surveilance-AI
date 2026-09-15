@@ -4,7 +4,8 @@
     "id": "Unique camera ID (used as key across backend + frontend)",
     "name": "Display name shown in HUD",
     "location": "Grid reference or physical description",
-    "video_path": "Path to MP4 file — relative to THIS sources.json, or absolute",
+    "video_path": "Path to MP4 file — relative to THIS sources.json, or absolute. For RTSP cameras use the rtsp:// URL here directly.",
+    "source_type": "file (default) | rtsp — controls whether video_path is resolved as a filesystem path or used as-is",
     "feed_type": "optical | thermal | ir",
     "fps_target": "Target FPS cap for inference loop (set lower on slow hardware)",
     "enabled": "Set false to skip this source without deleting it"

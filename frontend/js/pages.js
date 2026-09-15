@@ -418,7 +418,7 @@
     afterRender(view) {
       const mountEl = view.querySelector("#live-grid-mount");
       if (!mountEl) return;
-      window.liveGrid.mount(mountEl, { layout: "2x2" });
+      window.liveGrid.mount(mountEl, { layout: "3x2", compact: true });
     },
     onLeave() {
       window.liveGrid.unmount();

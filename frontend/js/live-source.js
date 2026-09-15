@@ -20,11 +20,26 @@
   // Same-origin — this frontend is served BY boot.ts on :3000, so no CORS needed.
   const NODE_BASE = "";
 
-  // camera_id -> video file number, mirrors runtime/sources.json (cam-01..cam-05 -> 1..5.mp4)
+  // Map of camera IDs that are live RTSP/IP cameras — streamed via MJPEG proxy
+  // instead of a local MP4 file. Add new IP cameras here when registering them.
+  const RTSP_CAMERAS = {
+    "cam-06": "/stream/cam-06",
+  };
+
+  // camera_id -> video URL.
+  // For RTSP cameras, returns the Node.js MJPEG proxy endpoint.
+  // For file-based cameras, maps cam-NN -> /videos/N.mp4.
   function videoUrl(cameraId) {
+    if (RTSP_CAMERAS[cameraId]) return RTSP_CAMERAS[cameraId];
     const match = /(\d+)\s*$/.exec(String(cameraId || ""));
     const n = match ? parseInt(match[1], 10) : 1;
     return "/videos/" + n + ".mp4";
+  }
+
+  // Returns true for IP cameras that stream MJPEG (not a local MP4).
+  // live-grid.js uses this to render <img> instead of <video> for those tiles.
+  function isRtspCamera(cameraId) {
+    return !!RTSP_CAMERAS[cameraId];
   }
 
   async function getCameras() {
@@ -133,5 +148,6 @@
     onAlert: onAlert,
     onConnectionChange: onConnectionChange,
     videoUrl: videoUrl,
+    isRtspCamera: isRtspCamera,
   };
 })();

@@ -120,6 +120,16 @@ export const demoStore = {
       resolution: "1920x1080 (Optical)",
       feedType: "optical" as const,
     },
+    {
+      id: "cam-06",
+      name: "IP Cam — Live Perimeter Feed",
+      location: "192.168.1.110 (RTSP IP Camera · Live)",
+      rtsp_url: "rtsp://user:user@192.168.1.110:554/cam/realmonitor",
+      status: "active" as const,
+      fps: 15,
+      resolution: "1920x1080 (IP Camera · RTSP)",
+      feedType: "optical" as const,
+    },
   ],
 
   zones: [

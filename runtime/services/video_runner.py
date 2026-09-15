@@ -40,12 +40,22 @@ def load_sources() -> list[dict]:
     for src in data.get("sources", []):
         if not src.get("enabled", True):
             continue
-        # Resolve video_path relative to sources.json location
-        vp = Path(SOURCES_PATH.parent / src["video_path"]).resolve()
-        if not vp.exists():
-            log.warning(f"Video not found for {src['id']}: {vp} — skipping")
-            continue
-        sources.append({**src, "video_path": str(vp)})
+
+        source_type = src.get("source_type", "file")
+
+        if source_type == "rtsp":
+            # RTSP / IP camera — video_path is already the stream URL, use as-is.
+            # OpenCV's VideoCapture handles rtsp:// URLs natively.
+            log.info(f"[{src['id']}] RTSP source registered: {src['video_path']}")
+            sources.append({**src})
+        else:
+            # Resolve video_path relative to sources.json location
+            vp = Path(SOURCES_PATH.parent / src["video_path"]).resolve()
+            if not vp.exists():
+                log.warning(f"Video not found for {src['id']}: {vp} — skipping")
+                continue
+            sources.append({**src, "video_path": str(vp)})
+
     log.info(f"Loaded {len(sources)} enabled source(s) from sources.json")
     return sources
 
@@ -90,9 +100,16 @@ async def run_camera(
         ret, frame = await asyncio.to_thread(cap.read)
 
         if not ret:
-            # End of file — loop back to start
-            log.debug(f"[{cam_id}] EOF — looping video")
-            await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, 0)
+            if source.get("source_type") == "rtsp":
+                # Live stream dropped — close and reconnect
+                log.warning(f"[{cam_id}] RTSP stream lost — reconnecting in 3s")
+                await asyncio.to_thread(cap.release)
+                cap = None
+                await asyncio.sleep(3)
+            else:
+                # End of file — loop back to start
+                log.debug(f"[{cam_id}] EOF — looping video")
+                await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, 0)
             continue
 
         frame_index += 1
